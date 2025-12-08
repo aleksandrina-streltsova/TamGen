@@ -284,7 +284,7 @@ def binarize_single_test_set(
     shutil.copy(pre_dicts_root / "dict.m1.txt", binary_dir)
     
     # Binarize coordinates.
-    coord_fn = src_dir / f'{subset_name}-coordinates.pkl'
+    coord_fn = binary_dir / f'{subset_name}-coordinates.pkl'
     if coord_fn.exists():
         coord_data = pickle_load(coord_fn)
         coord_bin_fn = binary_dir / f'{subset_name}.tg-m1.tg.coord'
@@ -292,7 +292,7 @@ def binarize_single_test_set(
         print(f'| Binarize coordinates {coord_fn} to {coord_bin_fn}.')
 
     # Binarize sites.
-    sites_fn = src_dir / f'{subset_name}-sites.pkl'
+    sites_fn = binary_dir / f'{subset_name}-sites.pkl'
     if sites_fn.exists():
         sites_data = pickle_load(sites_fn)
         sites_bin_fn = binary_dir / f'{subset_name}.tg-m1.tg.sites'
