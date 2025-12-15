@@ -5,10 +5,15 @@ cd $FAIRSEQ
 # pip install --editable .[chem]
 
 
-Layers=4
-EmbedDims=256
+EncLayers=4
+DecLayers=12
+EncEmbedDims=256
+DecEmbedDims=768
+DecFCDims=$((4*DecEmbedDims))
+DecAttnHeads=12
 LR=3e-5
 DP=0.2
+MaxLen=1024
 RunTrain=true
 RunGenerate=true
 datadir=dataset
@@ -22,16 +27,29 @@ beta=1
 DBS=false
 groups=$beam
 strength=0.5
+pretrainedpath=gpt_model/checkpoint_best.pt
 savedir=checkpoints/
 
 while [[ $# -gt 0 ]]; do
     case $1 in
-        -L | --Layers )
-            Layers=$2
+        -EL | --EncLayers )
+            EncLayers=$2
             shift 2
             ;;
-        -Dim )
-            EmbedDims=$2
+        -DL | --DecLayers )
+            DecLayers=$2
+            shift 2
+            ;;
+        -EDim )
+            EncEmbedDims=$2
+            shift 2
+            ;;
+        -DDim )
+            DecEmbedDims=$2
+            shift 2
+            ;;
+        -DFCDim )
+            DecFCDims=$2
             shift 2
             ;;
         -LR | --LearningRate )
@@ -40,6 +58,14 @@ while [[ $# -gt 0 ]]; do
             ;;
         -DP | --DropOut )
             DP=$2
+            shift 2
+            ;;
+        -DHeads )
+            DecAttnHeads=$2
+            shift 2
+            ;;
+        --max-len )
+            MaxLen=$2
             shift 2
             ;;
         --no-train )
@@ -94,6 +120,10 @@ while [[ $# -gt 0 ]]; do
             savedir=$2
             shift 2
             ;;
+        --pretrainedpath )
+            pretrainedpath=$2
+            shift 2
+            ;;
         *)
             ExtraArgs+=("$1")
             shift
@@ -131,15 +161,15 @@ if $RunTrain; then
     --weight-decay 1e-4 \
     --lr $LR \
     --warmup-updates 4000 \
-    --max-tokens 1024 \
-    --encoder-layers $Layers \
-    --encoder-embed-dim $EmbedDims \
-    --encoder-ffn-embed-dim $((4*EmbedDims)) \
+    --max-tokens $MaxLen \
+    --encoder-layers $EncLayers \
+    --encoder-embed-dim $EncEmbedDims \
+    --encoder-ffn-embed-dim $DecFCDims \
     --encoder-attention-heads 8 \
-    --decoder-layers 12 \
-    --decoder-embed-dim 768 \
-    --decoder-ffn-embed-dim $((4*768)) \
-    --decoder-attention-heads 12 \
+    --decoder-layers $DecLayers \
+    --decoder-embed-dim $DecEmbedDims \
+    --decoder-ffn-embed-dim $((4*DecEmbedDims)) \
+    --decoder-attention-heads $DecAttnHeads \
     --no-token-positional-embeddings \
     --dist-attn \
     --move-to-origin \
@@ -151,8 +181,7 @@ if $RunTrain; then
     --valid-subset $validset \
     --vae \
     --use-src-coord \
-    --pretrained-gpt-checkpoint \
-    gpt_model/checkpoint_best.pt \
+    --pretrained-gpt-checkpoint $pretrainedpath \
     --tensorboard-logdir $savedir/tensorbord_logs \
     --log-interval 10 \
     --log-format simple \
@@ -183,7 +212,7 @@ if $RunGenerate; then
     --task $task \
     --path $savedir/checkpoint_best.pt \
     --gen-subset $testset \
-    --beam $beam --nbest $beam --max-tokens 1024 \
+    --beam $beam --nbest $beam --max-tokens MaxLen \
     --seed $seed --sample-beta $beta \
     --use-src-coord \
     ${GenExtraArgs[@]} | \
