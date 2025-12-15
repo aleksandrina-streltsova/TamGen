@@ -25,7 +25,7 @@ class Dictionary(object):
         bos='<s>',
         extra_special_symbols=None,
     ):
-        self.unk_word, self.pad_word, self.eos_word = unk, pad, eos
+        self.unk_word, self.pad_word, self.eos_word, self.bos_word = unk, pad, eos, bos
         self.symbols = []
         self.count = []
         self.indices = {}
