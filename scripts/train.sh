@@ -5,9 +5,9 @@ cd $FAIRSEQ
 # pip install --editable .[chem]
 
 
-EncLayers=4
+EncLayers=2
 DecLayers=12
-EncEmbedDims=256
+EncEmbedDims=192
 DecEmbedDims=768
 DecFCDims=$((4*DecEmbedDims))
 DecAttnHeads=12
