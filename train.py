@@ -191,6 +191,17 @@ def get_training_stats(trainer):
     else:
         nll_loss = trainer.get_meter('train_loss')
     stats['ppl'] = utils.get_perplexity(nll_loss.avg)
+
+    for k in [
+        'accuracy',
+        'precision_macro', 'recall_macro', 'f1_macro',
+        'precision_weighted', 'recall_weighted', 'f1_weighted',
+        'mcc',
+    ]:
+        meter = trainer.get_meter(k)
+        if meter is not None:
+            stats[k] = meter
+
     stats['wps'] = trainer.get_meter('wps')
     stats['ups'] = trainer.get_meter('ups')
     stats['wpb'] = trainer.get_meter('wpb')
@@ -246,7 +257,10 @@ def validate(args, trainer, task, epoch_itr, subsets):
             for k, v in log_output.items():
                 if k in ['loss', 'nll_loss', 'ntokens', 'nsentences', 'sample_size']:
                     continue
-                extra_meters[k].update(v)
+                if 'loss' in k or k == 'accuracy':
+                    extra_meters[k].update(v, log_output['sample_size'])
+                else:
+                    extra_meters[k].update(v)
 
         # log validation stats
         stats = get_valid_stats(trainer, args, extra_meters)
