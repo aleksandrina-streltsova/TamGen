@@ -38,7 +38,7 @@ results = {
     "nlogP": []
 }
 
-for idx in range(100):
+for idx in all_cmpds.keys():
     X = []
     for smi, score in all_cmpds[idx].items():
         s = np.mean(score)
